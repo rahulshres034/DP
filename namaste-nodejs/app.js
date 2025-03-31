@@ -3,7 +3,7 @@ const bcrypt = require("bcrypt"); // Import bcrypt for password hashing
 const { users } = require("./model/index"); // Import users model from the database
 
 const app = express(); // Create an Express application
-
+const jwt = require("jsonwebtoken");
 // Set the view engine to EJS for rendering dynamic HTML files
 app.set("view engine", "ejs");
 
@@ -91,6 +91,10 @@ app.post("/login", async (req, res) => {
     const isMatched = bcrypt.compareSync(password, user.password);
 
     if (isMatched) {
+      const token = jwt.sign({ id: data.id }, "haha", {
+        expiresIn: "30d",
+      });
+      res.cookie("jwtToken", token);
       res.send("Logged in successfully");
     } else {
       res.send("Invalid password");
