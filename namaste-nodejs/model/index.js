@@ -33,6 +33,44 @@ db.sequelize = sequelize;
 // importing model files
 
 db.users = require("./userModel.js")(sequelize, DataTypes);
+db.question = require("./question.model.js")(sequelize, DataTypes);
+db.answer = require("./answer.model.js")(sequelize, DataTypes);
+
+// 2. Associations (Relationships):
+db.users.hasMany(db.question);
+// - This line defines a one-to-many relationship: one user can have many questions.
+// - In the database, this typically results in a foreign key (e.g., 'userId') in the 'questions' table
+//   that references the primary key of the 'users' table.
+
+db.question.belongsTo(db.users);
+// - This line defines the inverse of the previous relationship: one question belongs to one user.
+// - It reinforces the foreign key relationship and provides methods for querying related data.
+
+db.question.hasMany(db.answer);
+// - This line defines a one-to-many relationship: one question can have many answers.
+// - A foreign key (e.g., 'questionId') in the 'answers' table will reference the 'questions' table.
+
+db.answer.belongsTo(db.question);
+// - This line defines the inverse of the previous relationship: one answer belongs to one question.
+// - It reinforces the foreign key relationship.
+
+db.users.hasMany(db.answer);
+// - This line defines a one-to-many relationship: one user can have many answers.
+// - A foreign key (e.g., 'userId') in the 'answers' table will reference the 'users' table.
+// - This relation means that users can directly answer questions.
+
+db.answer.belongsTo(db.users);
+// - This line defines the inverse of the previous relationship: one answer belongs to one user.
+// - It reinforces the foreign key relationship.
+
+// Summary:
+// This code establishes a database schema with three tables: 'users', 'questions', and 'answers'.
+// It defines the relationships between these tables:
+// - Users can ask many questions.
+// - Questions can have many answers.
+// - Users can provide many answers.
+// These relationships allow for efficient querying and manipulation of related data within the application.
+// The duplicate assignment to `db.questions` is a potential error.
 
 db.sequelize.sync({ force: false }).then(() => {
   console.log("yes re-sync done");

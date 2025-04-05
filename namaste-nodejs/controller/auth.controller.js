@@ -60,7 +60,7 @@ exports.handleLogin = async (req, res) => {
 
     if (isMatched) {
       // Fix here: using user.id instead of data.id
-      const token = jwt.sign({ id: user.id }, "haha", {
+      const token = jwt.sign({ id: user.id }, "hahaha", {
         expiresIn: "30d",
       });
       res.cookie("jwtToken", token);
