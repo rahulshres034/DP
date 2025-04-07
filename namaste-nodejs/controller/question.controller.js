@@ -1,4 +1,4 @@
-const { users, question } = require("../model");
+const { users, question, answers } = require("../model");
 
 exports.renderAskQuestionPage = (req, res) => {
   res.render("question/askQuestion");
@@ -11,7 +11,7 @@ exports.askQuestion = async (req, res) => {
   console.log(req.file);
 
   const userId = req.userId;
-  const fileName = req.file.filename; // Changed 'fileName' to 'filename'
+  const fileName = req.file.filename;
 
   if (!title || !description) {
     return res.send("Please provide title, description");
@@ -34,4 +34,41 @@ exports.getAllQuestion = async (req, res) => {
       },
     ],
   });
+  // Add a response here, for example:
+  res.json(data);
+};
+
+exports.renderSingleQuestionPage = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const data = await question.findAll({
+      where: {
+        id: id,
+      },
+      include: [
+        {
+          model: users,
+          attributes: ["username"],
+        },
+      ],
+    });
+
+    // Fix: Changed 'question' to 'questionId' in the where clause
+    const answerData = await answers.findAll({
+      where: {
+        questionId: id, // Changed from 'question' to 'questionId'
+      },
+      include: [
+        {
+          model: users,
+          attributes: ["username"],
+        },
+      ],
+    });
+
+    res.render("./question/singleQuestion", { data, answers: answerData });
+  } catch (error) {
+    console.error("Error fetching question:", error);
+    res.status(500).send("Error loading question details");
+  }
 };

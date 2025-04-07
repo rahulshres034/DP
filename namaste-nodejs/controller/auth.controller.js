@@ -1,9 +1,18 @@
 const bcrypt = require("bcrypt"); // Import bcrypt for password hashing
-const { users } = require("../model/index"); // Import users model from the database
+const { users, question } = require("../model/index"); // Import users model from the database
 const jwt = require("jsonwebtoken");
 
-exports.renderHomePage = (req, res) => {
-  res.render("home"); // Render home.ejs
+exports.renderHomePage = async (req, res) => {
+  const data = await question.findAll({
+    include: [
+      {
+        model: users,
+        attributes: ["username"],
+      },
+    ],
+  });
+  console.log(data);
+  res.render("home", { data }); // Render home.ejs
 };
 
 exports.renderRegisterPage = (req, res) => {

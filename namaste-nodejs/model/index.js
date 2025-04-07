@@ -34,7 +34,7 @@ db.sequelize = sequelize;
 
 db.users = require("./userModel.js")(sequelize, DataTypes);
 db.question = require("./question.model.js")(sequelize, DataTypes);
-db.answer = require("./answer.model.js")(sequelize, DataTypes);
+db.answers = require("./answer.model.js")(sequelize, DataTypes);
 
 // 2. Associations (Relationships):
 db.users.hasMany(db.question);
@@ -46,20 +46,20 @@ db.question.belongsTo(db.users);
 // - This line defines the inverse of the previous relationship: one question belongs to one user.
 // - It reinforces the foreign key relationship and provides methods for querying related data.
 
-db.question.hasMany(db.answer);
+db.question.hasMany(db.answers);
 // - This line defines a one-to-many relationship: one question can have many answers.
 // - A foreign key (e.g., 'questionId') in the 'answers' table will reference the 'questions' table.
 
-db.answer.belongsTo(db.question);
+db.answers.belongsTo(db.question);
 // - This line defines the inverse of the previous relationship: one answer belongs to one question.
 // - It reinforces the foreign key relationship.
 
-db.users.hasMany(db.answer);
+db.users.hasMany(db.answers);
 // - This line defines a one-to-many relationship: one user can have many answers.
 // - A foreign key (e.g., 'userId') in the 'answers' table will reference the 'users' table.
 // - This relation means that users can directly answer questions.
 
-db.answer.belongsTo(db.users);
+db.answers.belongsTo(db.users);
 // - This line defines the inverse of the previous relationship: one answer belongs to one user.
 // - It reinforces the foreign key relationship.
 
