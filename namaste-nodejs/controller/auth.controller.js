@@ -38,7 +38,7 @@ exports.handleRegister = async (req, res) => {
       username,
     });
 
-    res.send("Registered successfully");
+    res.redirect("/login");
   } catch (error) {
     res.status(500).send("Error registering user"); // Handle errors gracefully
   }
@@ -73,7 +73,7 @@ exports.handleLogin = async (req, res) => {
         expiresIn: "30d",
       });
       res.cookie("jwtToken", token);
-      res.send("Logged in successfully");
+      res.redirect("/");
     } else {
       res.send("Invalid password");
     }
