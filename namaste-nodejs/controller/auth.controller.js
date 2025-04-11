@@ -1,6 +1,7 @@
 const bcrypt = require("bcrypt"); // Import bcrypt for password hashing
 const { users, question } = require("../model/index"); // Import users model from the database
 const jwt = require("jsonwebtoken");
+const sendEmail = require("../utils/sendEmail");
 
 exports.renderHomePage = async (req, res) => {
   const data = await question.findAll({
@@ -16,7 +17,7 @@ exports.renderHomePage = async (req, res) => {
 };
 
 exports.renderRegisterPage = (req, res) => {
-  res.render("register"); // Render register.ejs
+  res.render("./auth/register"); // Render register.ejs
 };
 
 exports.handleRegister = async (req, res) => {
@@ -45,7 +46,7 @@ exports.handleRegister = async (req, res) => {
 };
 
 exports.renderLogin = (req, res) => {
-  res.render("login"); // Render login.ejs
+  res.render("./auth/login"); // Render login.ejs
 };
 
 exports.handleLogin = async (req, res) => {
@@ -80,4 +81,33 @@ exports.handleLogin = async (req, res) => {
   } catch (error) {
     res.status(500).send("Error during login"); // Handle errors gracefully
   }
+};
+
+exports.renderForgotPasswordPage = (req, res) => {
+  res.render("./auth/forgotPassword");
+};
+
+exports.handleForgotPassword = async (req, res) => {
+  const { email } = req.body;
+  const data = await users.findAll({
+    where: {
+      email: email,
+    },
+  });
+  if (data.length == 0) return res.send("No user reegestereed with that email");
+  const otp = Math.floor(Math.random() * 1000) + 9999;
+  // send otp to thaat email
+
+  await sendEmail({
+    email: email,
+    subject: "Your reset passowrd OTP",
+    text: `Your otp is ${otp}`,
+  });
+  data[0].otp = otp;
+  await data[0].save();
+
+  res.redirect("/verifyOtp");
+};
+exports.renderVerifyOtpPage = (req, res) => {
+  res.render("./auth/verifyOtp");
 };
