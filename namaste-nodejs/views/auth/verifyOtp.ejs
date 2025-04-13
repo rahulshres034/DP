@@ -10,9 +10,9 @@
 <body>
 
 
-<form action="/verifyOtp" method="post">
+<form action="/verifyOtp/<%- email %>" method="post">
 
-    <input type="number" name="Otp" placeholder="Otp" required>
+    <input type="number" name="otp" placeholder="Otp" required>
     <input type="submit" value="Verify Otp">
  
 </form>
