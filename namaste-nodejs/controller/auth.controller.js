@@ -4,6 +4,7 @@ const jwt = require("jsonwebtoken");
 const sendEmail = require("../utils/sendEmail");
 
 exports.renderHomePage = async (req, res) => {
+  const [success] = req.flash("success");
   const data = await question.findAll({
     include: [
       {
@@ -13,7 +14,7 @@ exports.renderHomePage = async (req, res) => {
     ],
   });
   console.log(data);
-  res.render("home", { data }); // Render home.ejs
+  res.render("home", { data, success }); // Render home.ejs
 };
 
 exports.renderRegisterPage = (req, res) => {
@@ -46,7 +47,9 @@ exports.handleRegister = async (req, res) => {
 };
 
 exports.renderLogin = (req, res) => {
-  res.render("./auth/login"); // Render login.ejs
+  const [error] = req.flash("error");
+  const [success] = req.flash("success");
+  res.render("./auth/login", { error, success }); // Render login.ejs
 };
 
 exports.handleLogin = async (req, res) => {
@@ -74,12 +77,15 @@ exports.handleLogin = async (req, res) => {
         expiresIn: "30d",
       });
       res.cookie("jwtToken", token);
+      req.flash("success", "Logged in successfully");
       res.redirect("/");
     } else {
-      res.send("Invalid password");
+      res.flash("error", "Invalid password");
+      res.redirect("/login");
     }
   } catch (error) {
-    res.status(500).send("Error during login"); // Handle errors gracefully
+    req.flash("error", "No User with that email");
+    res.redirect("/login");
   }
 };
 
@@ -216,4 +222,10 @@ exports.handleResetPassword = async (req, res) => {
   } else {
     res.send("OTP Expired");
   }
+};
+
+exports.logout = (req, res) => {
+  res.clearCookie("jwtToken");
+  req.flash("success", "Logged out successfully");
+  res.redirect("/login");
 };

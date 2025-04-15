@@ -2,7 +2,8 @@ const express = require("express"); // Import Express framework
 const app = express(); // Create an Express application
 const { users } = require("./model/index"); // Import users model from the database
 const { promisify } = require("util");
-
+const session = require("express-session");
+const flash = require("connect-flash");
 // Set the view engine to EJS for rendering dynamic HTML files
 app.set("view engine", "ejs");
 
@@ -14,10 +15,17 @@ const cookieParser = require("cookie-parser");
 
 // Middleware to parse URL-encoded request bodies (form submissions)
 app.use(express.urlencoded({ extended: true }));
-
 // Middleware to parse incoming JSON requests
 app.use(express.json());
 app.use(cookieParser());
+app.use(
+  session({
+    secret: "thisissecretforsession",
+    resave: false,
+    saveUninitialized: false,
+  })
+);
+app.use(flash());
 
 app.use(async (req, res, next) => {
   const token = req.cookies.jwtToken;
