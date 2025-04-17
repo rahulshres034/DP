@@ -10,7 +10,7 @@ const {
   handleResetPassword,
   verifyOtp,
 } = require("../controller/auth.controller");
-const catchError = require("../utils/catchAsync");
+const catchError = require("../utils/catchError");
 
 const router = require("express").Router();
 router
@@ -19,8 +19,8 @@ router
   .get(renderRegisterPage);
 router
   .route("/login")
-  .post(catchError(handleLogin))
-  .get(catchError(renderLogin));
+  .get(catchError(renderLogin))
+  .post(catchError(handleLogin));
 router
   .route("/forgotPassword")
   .get(renderForgotPasswordPage)

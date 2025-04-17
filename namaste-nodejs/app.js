@@ -1,9 +1,13 @@
 const express = require("express"); // Import Express framework
 const app = express(); // Create an Express application
-const { users } = require("./model/index"); // Import users model from the database
+const { users, answers, sequelize } = require("./model/index"); // Import users model from the database
 const { promisify } = require("util");
 const session = require("express-session");
 const flash = require("connect-flash");
+const jwt = require("jsonwebtoken");
+const socketio = require("socket.io");
+const { QueryTypes } = require("sequelize");
+
 // Set the view engine to EJS for rendering dynamic HTML files
 app.set("view engine", "ejs");
 
@@ -56,6 +60,76 @@ app.use("/", questionRoute);
 app.use("/answer", answerRoute);
 
 // Start the Express server on port 3000
-app.listen(3000, () => {
+const server = app.listen(3000, () => {
   console.log("Server is running on port 3000");
+});
+
+const io = socketio(server, {
+  cors: {
+    origin: "*",
+  },
+});
+
+io.on("connection", (socket) => {
+  // In app.js, update the socket.on('like') handler:
+  socket.on("like", async ({ answerId, cookie }) => {
+    const answer = await answers.findByPk(answerId);
+    if (answer && cookie) {
+      try {
+        // Use cookie instead of undefined token
+        const decryptedResult = await promisify(jwt.verify)(cookie, "hahaha");
+        if (decryptedResult) {
+          try {
+            // Check if likes table exists, if not create it
+            await sequelize.query(
+              `CREATE TABLE IF NOT EXISTS likes_${answerId} (
+              id INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
+              userId INT NOT NULL
+            )`,
+              {
+                type: QueryTypes.RAW,
+              }
+            );
+
+            // Check if user already liked
+            const user = await sequelize.query(
+              `SELECT * FROM likes_${answerId} WHERE userId=${decryptedResult.id}`,
+              {
+                type: QueryTypes.SELECT,
+              }
+            );
+
+            if (user.length === 0) {
+              await sequelize.query(
+                `INSERT INTO likes_${answerId} (userId) VALUES(${decryptedResult.id})`,
+                {
+                  type: QueryTypes.INSERT,
+                }
+              );
+            }
+
+            const likes = await sequelize.query(
+              `SELECT * FROM likes_${answerId}`,
+              {
+                type: QueryTypes.SELECT,
+              }
+            );
+
+            const likesCount = likes.length;
+            // Update the answer with the like count
+            await answer.update({
+              likes: likesCount,
+            });
+
+            // Emit to all clients, not just the socket
+            io.emit("likeUpdate", { likesCount, answerId });
+          } catch (error) {
+            console.error("Database error:", error);
+          }
+        }
+      } catch (error) {
+        console.error("Token verification error:", error);
+      }
+    }
+  });
 });

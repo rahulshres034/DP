@@ -21,6 +21,30 @@ exports.renderRegisterPage = (req, res) => {
   res.render("./auth/register"); // Render register.ejs
 };
 
+// exports.handleRegister = async (req, res) => {
+//   const { username, email, password } = req.body;
+
+//   // Validate required fields
+//   if (!username || !email || !password) {
+//     return res.send("Please provide a username, email, and password");
+//   }
+
+//   try {
+//     // Hash the password before saving it
+//     const hashedPassword = bcrypt.hashSync(password, 10);
+
+//     // Create new user record in the database
+//     await users.create({
+//       email,
+//       password: hashedPassword,
+//       username,
+//     });
+
+//     res.redirect("/login");
+//   } catch (error) {
+//     res.status(500).send("Error registering user"); // Handle errors gracefully
+//   }
+// };
 exports.handleRegister = async (req, res) => {
   const { username, email, password } = req.body;
 
@@ -29,29 +53,23 @@ exports.handleRegister = async (req, res) => {
     return res.send("Please provide a username, email, and password");
   }
 
-  try {
-    // Hash the password before saving it
-    const hashedPassword = bcrypt.hashSync(password, 10);
+  // Hash the password before saving it
+  const hashedPassword = bcrypt.hashSync(password, 10);
 
-    // Create new user record in the database
-    await users.create({
-      email,
-      password: hashedPassword,
-      username,
-    });
+  // Create new user record in the database
+  await users.create({
+    email,
+    password: hashedPassword,
+    username,
+  });
 
-    res.redirect("/login");
-  } catch (error) {
-    res.status(500).send("Error registering user"); // Handle errors gracefully
-  }
+  res.redirect("/login");
 };
-
 exports.renderLogin = (req, res) => {
   const [error] = req.flash("error");
   const [success] = req.flash("success");
   res.render("./auth/login", { error, success }); // Render login.ejs
 };
-
 exports.handleLogin = async (req, res) => {
   const { email, password } = req.body;
 
@@ -65,14 +83,14 @@ exports.handleLogin = async (req, res) => {
     const user = await users.findOne({ where: { email } });
 
     if (!user) {
-      return res.send("No user found with that email");
+      req.flash("error", "No user found with that email");
+      return res.redirect("/login");
     }
 
     // Compare entered password with stored hashed password
     const isMatched = bcrypt.compareSync(password, user.password);
 
     if (isMatched) {
-      // Fix here: using user.id instead of data.id
       const token = jwt.sign({ id: user.id }, "hahaha", {
         expiresIn: "30d",
       });
@@ -80,7 +98,8 @@ exports.handleLogin = async (req, res) => {
       req.flash("success", "Logged in successfully");
       res.redirect("/");
     } else {
-      res.flash("error", "Invalid password");
+      // Fix: Use req.flash instead of res.flash
+      req.flash("error", "Invalid password");
       res.redirect("/login");
     }
   } catch (error) {
@@ -88,6 +107,42 @@ exports.handleLogin = async (req, res) => {
     res.redirect("/login");
   }
 };
+// exports.handleLogin = async (req, res) => {
+//   const { email, password } = req.body;
+
+//   // Validate required fields
+//   if (!email || !password) {
+//     return res.send("Please provide an email and password");
+//   }
+
+//   try {
+//     // Find user by email
+//     const user = await users.findOne({ where: { email } });
+
+//     if (!user) {
+//       return res.send("No user found with that email");
+//     }
+
+//     // Compare entered password with stored hashed password
+//     const isMatched = bcrypt.compareSync(password, user.password);
+
+//     if (isMatched) {
+//       // Fix here: using user.id instead of data.id
+//       const token = jwt.sign({ id: user.id }, "hahaha", {
+//         expiresIn: "30d",
+//       });
+//       res.cookie("jwtToken", token);
+//       req.flash("success", "Logged in successfully");
+//       res.redirect("/");
+//     } else {
+//       res.flash("error", "Invalid password");
+//       res.redirect("/login");
+//     }
+//   } catch (error) {
+//     req.flash("error", "No User with that email");
+//     res.redirect("/login");
+//   }
+// };
 
 exports.renderForgotPasswordPage = (req, res) => {
   res.render("./auth/forgotPassword");

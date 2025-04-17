@@ -1,4 +1,5 @@
-const { users, question, answers } = require("../model");
+const { QueryTypes } = require("sequelize");
+const { users, question, answers, sequelize } = require("../model");
 
 exports.renderAskQuestionPage = (req, res) => {
   res.render("question/askQuestion");
@@ -53,6 +54,21 @@ exports.renderSingleQuestionPage = async (req, res) => {
       ],
     });
 
+    let likes;
+    let count = 0;
+
+    try {
+      likes = await sequelize.query(`SELECT * FROM likes_${id}`, {
+        type: QueryTypes.SELECT,
+      });
+
+      if (likes.length) {
+        count = likes.length;
+      }
+    } catch (err) {
+      console.log(err);
+    }
+
     // Fix: Changed 'question' to 'questionId' in the where clause
     const answerData = await answers.findAll({
       where: {
@@ -66,7 +82,11 @@ exports.renderSingleQuestionPage = async (req, res) => {
       ],
     });
 
-    res.render("./question/singleQuestion", { data, answers: answerData });
+    res.render("./question/singleQuestion", {
+      data,
+      answers: answerData,
+      likes: count,
+    });
   } catch (error) {
     console.error("Error fetching question:", error);
     res.status(500).send("Error loading question details");
